@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Cliente;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -12,12 +13,17 @@ class Venta extends Model
     protected $table = 'ventas';
     protected $primaryKey = 'id_venta';
 
-    protected $fillable = ['fecha_hora', 'total_neto', 'igv', 'total_pagar', 'metodo_pago', 'id_usuario'];
+    protected $fillable = ['fecha_hora', 'total_neto', 'igv', 'total_pagar', 'metodo_pago', 'id_usuario', 'id_cliente'];
     protected $casts = ['fecha_hora' => 'datetime'];
 
     public function cajero(): BelongsTo
     {
         return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'id_cliente', 'id_cliente');
     }
 
     public function detalles(): HasMany

@@ -1,4 +1,4 @@
-﻿window.loadPOS = async () => {
+window.loadPOS = async () => {
   const { data } = await apiFetch('productos');
   AppState.productos = data.productos;
   renderPOSTable(AppState.productos);
@@ -28,8 +28,8 @@ function renderCart() {
 document.addEventListener('DOMContentLoaded', () => {
   $('btn-procesar-venta')?.addEventListener('click', async () => {
     if (!AppState.cart.length) return toast('El carrito esta vacio', 'error');
-    const { data } = await apiFetch('ventas', { method: 'POST', body: { items: AppState.cart, metodo: $('payment-method').value, cliente: $('cliente-doc').value } });
-    toast(`Venta procesada - Total: ${fmt(data.total)}`); AppState.cart = []; renderCart();
+    const { data } = await apiFetch('ventas', { method: 'POST', body: { items: AppState.cart, metodo: $('pos-metodo').value, cliente_dni: $('cliente-doc').value.trim() } });
+    toast(`Venta procesada - Total: ${fmt(data.total)}`); AppState.cart = []; renderCart(); $('cliente-doc').value = '';
   });
   $('btn-clear-cart')?.addEventListener('click', () => { AppState.cart = []; renderCart(); });
 });

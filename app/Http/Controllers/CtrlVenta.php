@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DetalleVenta;
+use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Usuario;
 use App\Models\Venta;
@@ -14,11 +15,13 @@ class CtrlVenta extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(['ok' => true, 'data' => ['ventas' => Venta::with('cajero')->latest('fecha_hora')->get()->map(fn ($venta) => [
+        return response()->json(['ok' => true, 'data' => ['ventas' => Venta::with(['cajero', 'cliente'])->latest('fecha_hora')->get()->map(fn ($venta) => [
             'id_venta' => $venta->id_venta,
             'fecha' => optional($venta->fecha_hora)->format('Y-m-d H:i'),
             'cajero' => trim(($venta->cajero?->nombres ?? '') . ' ' . ($venta->cajero?->apellidos ?? '')),
-            'cliente' => '-',
+            'cliente' => $venta->cliente
+                ? trim(($venta->cliente->nombres ?? '') . ' ' . ($venta->cliente->apellidos ?? '')) . ' (' . ($venta->cliente->dni ?? '') . ')'
+                : '-',
             'subtotal' => (float) $venta->total_neto,
             'impuesto' => (float) $venta->igv,
             'total' => (float) $venta->total_pagar,
@@ -35,6 +38,7 @@ class CtrlVenta extends Controller
             'items.*.cantidad' => ['required', 'integer', 'min:1'],
             'metodo' => ['nullable', 'string', 'max:40'],
             'id_usuario' => ['nullable', 'exists:usuarios,id_usuario'],
+            'cliente_dni' => ['nullable', 'string', 'max:15'],
         ]);
 
         $venta = DB::transaction(function () use ($validated, $request) {
@@ -54,6 +58,13 @@ class CtrlVenta extends Controller
             $igv = round($subtotal * 0.18, 2);
             $usuarioId = $request->input('id_usuario') ?: Usuario::where('username', 'admin')->value('id_usuario') ?: Usuario::query()->value('id_usuario');
 
+            // Buscar cliente por DNI si se proporcionó
+            $clienteId = null;
+            $dniCliente = trim($request->input('cliente_dni', ''));
+            if ($dniCliente !== '') {
+                $clienteId = Cliente::where('dni', $dniCliente)->value('id_cliente');
+            }
+
             $venta = Venta::create([
                 'fecha_hora' => now(),
                 'total_neto' => $subtotal,
@@ -61,6 +72,7 @@ class CtrlVenta extends Controller
                 'total_pagar' => $subtotal + $igv,
                 'metodo_pago' => $request->input('metodo', 'efectivo'),
                 'id_usuario' => $usuarioId,
+                'id_cliente' => $clienteId,
             ]);
 
             foreach ($items as $item) {

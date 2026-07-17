@@ -190,8 +190,8 @@
                 </select>
               </div>
               <div class="form-field" style="margin-bottom:12px">
-                <label>Cliente (opcional)</label>
-                <input type="text" id="pos-cliente-search" placeholder="Buscar DNI o nombre...">
+                <label>Cliente (DNI, opcional)</label>
+                <input type="text" id="cliente-doc" placeholder="DNI del cliente..." maxlength="15">
               </div>
               <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px" id="btn-procesar-venta">
                 Procesar Venta
